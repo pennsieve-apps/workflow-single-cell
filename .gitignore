@@ -1,0 +1,16 @@
+data/download/
+data/tls-visium/
+data/lymph-node/
+data/xenium-breast/
+data/work*/
+data/run*/
+data/out*/
+*.h5ad
+*.h5
+*.zip
+*.parquet
+__pycache__/
+.venv/
+.DS_Store
+data/
+*.log
