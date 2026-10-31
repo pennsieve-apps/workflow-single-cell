@@ -47,7 +47,7 @@ a `labels.csv` and a `samples.csv`, and needs no spatial coordinates. Its input 
   UTC with seconds.
 - A sample that fails is logged and skipped; the step fails only when every sample failed or no
   input was found. Exit 1 = no usable input / every sample failed, 2 = bad parameters.
-- Logs go to stdout, one line per sample with counts and timings. Never log file contents or
+- Logs go to stdout or stderr (both reach the step's log), one line per sample with counts and timings. Never log file contents or
   metadata values beyond counts (subject sheets may hold clinical fields).
 - Memory: per-sample work streams one `.h5ad` at a time. Joint steps (integration, reference
   mapping) hold all cells, CSR sparse, float32; document the cells-per-GiB they need. Never
