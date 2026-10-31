@@ -236,7 +236,7 @@
       "id": "report",
       "type": "processor",
       "sourceUrl": "https://github.com/pennsieve-apps/sc-report",
-      "tag": "v0.1.0",
+      "tag": "v0.1.1",
       "dependsOn": [
         "prep",
         "qc",

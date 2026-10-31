@@ -76,10 +76,55 @@ def atlas():
     }
 
 
+def multiome():
+    steps = [
+        step("prep", "sc-prep", 1, 1, ["multiome"], [("multiome", None, "counts")]),
+        step("qc", "sc-qc", 2, 1, ["prep"], [("prep", "cells", "cells"), ("prep", "droplets", "droplets")]),
+        step("integrate", "sc-integrate", 3, 1, ["qc"], [("qc", "cells", "cells")]),
+        step("annotate", "sc-annotate", 4, 1, ["integrate"], [("integrate", "cells", "cells")]),
+        step("atac", "atac-prep", 3, 3, ["multiome", "qc"], [("multiome", None, "fragments"), ("qc", "cells", "cells")]),
+        step("regulome", "atac-regulome", 5, 2, ["atac", "annotate"],
+             [("atac", "atac", "atac"), ("annotate", "labels", "labels"), ("annotate", "cells", "cells")],
+             {"LABEL_COLUMN": "cell_type"}),
+        step("report", "sc-report", 6, 2, ["prep", "qc", "integrate", "annotate", "atac", "regulome"],
+             [META, ("qc", "qc", "qc"), ("integrate", "integration", "integration"),
+              ("annotate", "annotation", "annotation"), ("atac", "qc", "atac"), ("regulome", "regulome", "regulome")],
+             {"REPORT_TITLE": "Multiome Gene Regulation"}),
+    ]
+    return {
+        "name": "Multiome Gene Regulation",
+        "summary": "10x Multiome: RNA cell types, ATAC QC, peaks and motifs per cell type, peak-to-gene links.",
+        "description": (
+            "Links gene regulation to cell types in single-nucleus multiome (RNA + ATAC) data such as 10x Cell Ranger "
+            "ARC outputs. The RNA side runs as in the single-nucleus workflow (sc-prep, sc-qc, sc-integrate, "
+            "sc-annotate) and gives every nucleus a cell type; atac-prep imports the ATAC fragments of the nuclei "
+            "that passed RNA QC and filters them on fragment counts and TSS enrichment (SnapATAC2); atac-regulome "
+            "calls peaks per cell type (MACS3, ENCODE blacklist for GRCh38), finds marker peaks, tests JASPAR 2026 "
+            "motifs against a GC-matched background, and links peaks to genes from the RNA; sc-report writes the "
+            "HTML report with citations."
+            " If you used Pennsieve to store, analyse, share or publish data reported in a publication, please cite "
+            "Goldblum Z, et al. Scientific Data 2025;12:1834 (doi:10.1038/s41597-025-06075-5), the datasets you used "
+            "and the methods listed in the report."),
+        "inputs": [
+            {"id": "multiome", "name": "Multiome data",
+             "description": "Cell Ranger ARC outputs per sample (filtered_feature_bc_matrix.h5, atac_fragments.tsv.gz "
+                            "and .tbi), with optional samples.csv or SPARC samples.xlsx / subjects.xlsx.",
+             "position": {"x": 40, "y": 40 + ROW * 2}},
+        ],
+        "outputs": [
+            output("report_out", "Report", "report", "report", "derivatives/multiome/report", 7, 1),
+            output("tables_out", "Tables", "report", "tables", "derivatives/multiome/tables", 7, 2),
+            output("regulome_out", "Peaks, motifs and links", "regulome", "regulome",
+                   "derivatives/multiome/regulome", 7, 3),
+        ],
+        "processors": steps,
+    }
+
+
 def main():
     out = ROOT / "workflow"
     out.mkdir(exist_ok=True)
-    for name, wf in (("single-nucleus-atlas-mapping", atlas()),):
+    for name, wf in (("single-nucleus-atlas-mapping", atlas()), ("multiome-gene-regulation", multiome())):
         assert len(wf["summary"].encode()) <= 100, (name, len(wf["summary"].encode()))
         (out / f"{name}.json").write_text(json.dumps(wf, indent=2) + "\n")
         print(f"wrote workflow/{name}.json ({len(wf['processors'])} steps)")

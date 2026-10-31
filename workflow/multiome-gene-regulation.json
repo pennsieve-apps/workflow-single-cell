@@ -1,0 +1,284 @@
+{
+  "name": "Multiome Gene Regulation",
+  "summary": "10x Multiome: RNA cell types, ATAC QC, peaks and motifs per cell type, peak-to-gene links.",
+  "description": "Links gene regulation to cell types in single-nucleus multiome (RNA + ATAC) data such as 10x Cell Ranger ARC outputs. The RNA side runs as in the single-nucleus workflow (sc-prep, sc-qc, sc-integrate, sc-annotate) and gives every nucleus a cell type; atac-prep imports the ATAC fragments of the nuclei that passed RNA QC and filters them on fragment counts and TSS enrichment (SnapATAC2); atac-regulome calls peaks per cell type (MACS3, ENCODE blacklist for GRCh38), finds marker peaks, tests JASPAR 2026 motifs against a GC-matched background, and links peaks to genes from the RNA; sc-report writes the HTML report with citations. If you used Pennsieve to store, analyse, share or publish data reported in a publication, please cite Goldblum Z, et al. Scientific Data 2025;12:1834 (doi:10.1038/s41597-025-06075-5), the datasets you used and the methods listed in the report.",
+  "inputs": [
+    {
+      "id": "multiome",
+      "name": "Multiome data",
+      "description": "Cell Ranger ARC outputs per sample (filtered_feature_bc_matrix.h5, atac_fragments.tsv.gz and .tbi), with optional samples.csv or SPARC samples.xlsx / subjects.xlsx.",
+      "position": {
+        "x": 40,
+        "y": 300
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "id": "report_out",
+      "name": "Report",
+      "from": {
+        "step": "report",
+        "output": "report"
+      },
+      "position": {
+        "x": 1860,
+        "y": 170
+      },
+      "default": {
+        "targetType": "Pennsieve Dataset",
+        "params": {
+          "TARGET_FOLDER": "derivatives/multiome/report"
+        }
+      }
+    },
+    {
+      "id": "tables_out",
+      "name": "Tables",
+      "from": {
+        "step": "report",
+        "output": "tables"
+      },
+      "position": {
+        "x": 1860,
+        "y": 300
+      },
+      "default": {
+        "targetType": "Pennsieve Dataset",
+        "params": {
+          "TARGET_FOLDER": "derivatives/multiome/tables"
+        }
+      }
+    },
+    {
+      "id": "regulome_out",
+      "name": "Peaks, motifs and links",
+      "from": {
+        "step": "regulome",
+        "output": "regulome"
+      },
+      "position": {
+        "x": 1860,
+        "y": 430
+      },
+      "default": {
+        "targetType": "Pennsieve Dataset",
+        "params": {
+          "TARGET_FOLDER": "derivatives/multiome/regulome"
+        }
+      }
+    }
+  ],
+  "processors": [
+    {
+      "id": "prep",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/sc-prep",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "multiome"
+      ],
+      "position": {
+        "x": 300,
+        "y": 170
+      },
+      "cpu": "2048",
+      "memory": "4096",
+      "inputs": [
+        {
+          "from": "multiome",
+          "input": "counts"
+        }
+      ]
+    },
+    {
+      "id": "qc",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/sc-qc",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "prep"
+      ],
+      "position": {
+        "x": 560,
+        "y": 170
+      },
+      "cpu": "4096",
+      "memory": "8192",
+      "inputs": [
+        {
+          "from": "prep",
+          "output": "cells",
+          "input": "cells"
+        },
+        {
+          "from": "prep",
+          "output": "droplets",
+          "input": "droplets"
+        }
+      ]
+    },
+    {
+      "id": "integrate",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/sc-integrate",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "qc"
+      ],
+      "position": {
+        "x": 820,
+        "y": 170
+      },
+      "cpu": "4096",
+      "memory": "16384",
+      "inputs": [
+        {
+          "from": "qc",
+          "output": "cells",
+          "input": "cells"
+        }
+      ]
+    },
+    {
+      "id": "annotate",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/sc-annotate",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "integrate"
+      ],
+      "position": {
+        "x": 1080,
+        "y": 170
+      },
+      "cpu": "4096",
+      "memory": "16384",
+      "inputs": [
+        {
+          "from": "integrate",
+          "output": "cells",
+          "input": "cells"
+        }
+      ]
+    },
+    {
+      "id": "atac",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/atac-prep",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "multiome",
+        "qc"
+      ],
+      "position": {
+        "x": 820,
+        "y": 430
+      },
+      "cpu": "4096",
+      "memory": "8192",
+      "inputs": [
+        {
+          "from": "multiome",
+          "input": "fragments"
+        },
+        {
+          "from": "qc",
+          "output": "cells",
+          "input": "cells"
+        }
+      ]
+    },
+    {
+      "id": "regulome",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/atac-regulome",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "atac",
+        "annotate"
+      ],
+      "position": {
+        "x": 1340,
+        "y": 300
+      },
+      "cpu": "4096",
+      "memory": "30720",
+      "inputs": [
+        {
+          "from": "atac",
+          "output": "atac",
+          "input": "atac"
+        },
+        {
+          "from": "annotate",
+          "output": "labels",
+          "input": "labels"
+        },
+        {
+          "from": "annotate",
+          "output": "cells",
+          "input": "cells"
+        }
+      ],
+      "defaultParams": {
+        "LABEL_COLUMN": "cell_type"
+      }
+    },
+    {
+      "id": "report",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/sc-report",
+      "tag": "v0.1.1",
+      "dependsOn": [
+        "prep",
+        "qc",
+        "integrate",
+        "annotate",
+        "atac",
+        "regulome"
+      ],
+      "position": {
+        "x": 1600,
+        "y": 300
+      },
+      "cpu": "1024",
+      "memory": "2048",
+      "inputs": [
+        {
+          "from": "prep",
+          "output": "metadata",
+          "input": "metadata"
+        },
+        {
+          "from": "qc",
+          "output": "qc",
+          "input": "qc"
+        },
+        {
+          "from": "integrate",
+          "output": "integration",
+          "input": "integration"
+        },
+        {
+          "from": "annotate",
+          "output": "annotation",
+          "input": "annotation"
+        },
+        {
+          "from": "atac",
+          "output": "qc",
+          "input": "atac"
+        },
+        {
+          "from": "regulome",
+          "output": "regulome",
+          "input": "regulome"
+        }
+      ],
+      "defaultParams": {
+        "REPORT_TITLE": "Multiome Gene Regulation"
+      }
+    }
+  ]
+}
