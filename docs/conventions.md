@@ -134,7 +134,7 @@ reports read it.
 
 `reference.h5ad` (counts + `obs["cell_type"]`, subsampled to ≤ `MAX_CELLS_PER_TYPE`: the training reference in reference mode, the labelled query cells in markers mode) plus, when
 scANVI ran, the scvi-tools model folder `scanvi/` and a cell2location-ready signature
-`signatures.csv` (genes × cell types, mean normalized expression per type). A later run of
+`signatures.csv` (genes × cell types, mean raw counts per cell of each type; cell2location reads signatures as expected counts). A later run of
 sc-annotate takes it on its `reference` input, and the spatial cell2location app can use it as
 its reference.
 
