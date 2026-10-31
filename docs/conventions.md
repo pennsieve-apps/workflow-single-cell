@@ -59,6 +59,20 @@ a `labels.csv` and a `samples.csv`, and needs no spatial coordinates. Its input 
   `computeTypes: [gpu]`; the cpu variant uses CPU-only torch. Code picks the device with
   `torch.cuda.is_available()` and logs it.
 
+## Shared code
+
+Every app vendors `shared/safe_inputs.py` from this repo **unchanged** as
+`processor/safe_inputs.py`; it is the only way an app gets input paths. `InputDir(INPUT_DIR).walk()`
+lists the files the symlink rule above allows (a link's target is taken one hop: an upstream entry
+that is itself a symlink elsewhere is not trusted), and any path an app builds itself goes through
+`inside()` / `check()` / `open_checked()` or the capped readers (`read_bytes`, `read_text`,
+`read_json`, `read_csv`, `inline_png`); `.xlsx` files are checked with `xlsx_uncompressed_size()`
+and `assert_defusedxml()`, HDF5 files with `check_h5()`, and thread counts come from
+`cpu_threads(THREADS)`. Fix bugs here (with a test in `shared/test_safe_inputs.py`), never in a
+copy, then re-vendor. Check the copies with
+`scripts/check-shared.sh ~/code/pennsieve/sc-prep ~/code/pennsieve/sc-qc …` (exit 1 and a diff
+when a copy is missing or differs).
+
 ## Files
 
 ### The AnnData contract (`cells` ports)
