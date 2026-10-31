@@ -24,6 +24,9 @@ a `labels.csv` and a `samples.csv`, and needs no spatial coordinates. Its input 
 - One output port: it is the whole `$OUTPUT_DIR`. Two or more outputs: each is written to
   `$OUTPUT_DIR/<name>/`.
 - Inputs with several ports use `placement: subfolder`: each arrives at `$INPUT_DIR/<name>/`.
+  The platform's links are the entries of `$INPUT_DIR` and of a real `$INPUT_DIR/<port>/` folder;
+  a file must resolve inside `$INPUT_DIR` or inside the target of one of those links (deeper
+  links that leave are skipped).
   Apps must also work when no links are used (everything side by side at the root of
   `$INPUT_DIR`), by finding files by name anywhere under `$INPUT_DIR` (follow symlinks;
   INPUT_DIR entries are symlinks).
@@ -129,7 +132,7 @@ reports read it.
 
 ### Reference models (`model` port of sc-annotate)
 
-`reference.h5ad` (counts + `obs["cell_type"]`, subsampled to ≤ `MAX_CELLS_PER_TYPE`) plus, when
+`reference.h5ad` (counts + `obs["cell_type"]`, subsampled to ≤ `MAX_CELLS_PER_TYPE`: the training reference in reference mode, the labelled query cells in markers mode) plus, when
 scANVI ran, the scvi-tools model folder `scanvi/` and a cell2location-ready signature
 `signatures.csv` (genes × cell types, mean normalized expression per type). A later run of
 sc-annotate takes it on its `reference` input, and the spatial cell2location app can use it as
