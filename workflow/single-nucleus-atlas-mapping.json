@@ -1,0 +1,291 @@
+{
+  "name": "Single-nucleus Atlas Mapping & Condition Comparison",
+  "summary": "snRNA/scRNA-seq: QC, integration, cell types, markers, pseudobulk DE between conditions.",
+  "description": "Maps the cell types of single-nucleus or single-cell RNA-seq samples and compares conditions. Reads Cell Ranger (count, Flex, ARC), .h5ad or Seurat .rds input and joins SPARC subjects/samples metadata onto the cells (sc-prep), removes ambient RNA (CellBender, gpu variant), doublets and low-quality nuclei and normalizes (sc-qc), integrates samples by donor with Harmony (cpu) or scVI (gpu), clusters and embeds them (sc-integrate), labels cell types from cited marker sets (MARKER_SET: drg-human, knee-human, broad) or by mapping to a reference (sc-annotate), finds marker genes (sc-markers), tests composition and pseudobulk differential expression per cell type between conditions (st-compare), and writes an HTML report with citations (sc-report). Choose the gpu variant of sc-qc, sc-integrate and sc-annotate on a GPU node for ambient-RNA removal and scVI/scANVI.",
+  "inputs": [
+    {
+      "id": "counts",
+      "name": "Single-cell data",
+      "description": "A folder of Cell Ranger outputs (count/, Flex or ARC), .h5ad or Seurat .rds files, with optional samples.csv or SPARC samples.xlsx / subjects.xlsx.",
+      "position": {
+        "x": 40,
+        "y": 300
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "id": "report_out",
+      "name": "Report",
+      "from": {
+        "step": "report",
+        "output": "report"
+      },
+      "position": {
+        "x": 1860,
+        "y": 170
+      },
+      "default": {
+        "targetType": "Pennsieve Dataset",
+        "params": {
+          "TARGET_FOLDER": "derivatives/single-cell/report"
+        }
+      }
+    },
+    {
+      "id": "tables_out",
+      "name": "Tables",
+      "from": {
+        "step": "report",
+        "output": "tables"
+      },
+      "position": {
+        "x": 1860,
+        "y": 300
+      },
+      "default": {
+        "targetType": "Pennsieve Dataset",
+        "params": {
+          "TARGET_FOLDER": "derivatives/single-cell/tables"
+        }
+      }
+    },
+    {
+      "id": "cells_out",
+      "name": "Annotated cells",
+      "from": {
+        "step": "annotate",
+        "output": "cells"
+      },
+      "position": {
+        "x": 1860,
+        "y": 430
+      }
+    },
+    {
+      "id": "model_out",
+      "name": "Reference model",
+      "from": {
+        "step": "annotate",
+        "output": "model"
+      },
+      "position": {
+        "x": 1860,
+        "y": 560
+      }
+    }
+  ],
+  "processors": [
+    {
+      "id": "prep",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/sc-prep",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "counts"
+      ],
+      "position": {
+        "x": 300,
+        "y": 300
+      },
+      "cpu": "2048",
+      "memory": "4096",
+      "inputs": [
+        {
+          "from": "counts",
+          "input": "counts"
+        }
+      ]
+    },
+    {
+      "id": "qc",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/sc-qc",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "prep"
+      ],
+      "position": {
+        "x": 560,
+        "y": 300
+      },
+      "cpu": "4096",
+      "memory": "8192",
+      "inputs": [
+        {
+          "from": "prep",
+          "output": "cells",
+          "input": "cells"
+        },
+        {
+          "from": "prep",
+          "output": "droplets",
+          "input": "droplets"
+        }
+      ]
+    },
+    {
+      "id": "integrate",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/sc-integrate",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "qc"
+      ],
+      "position": {
+        "x": 820,
+        "y": 300
+      },
+      "cpu": "4096",
+      "memory": "16384",
+      "inputs": [
+        {
+          "from": "qc",
+          "output": "cells",
+          "input": "cells"
+        }
+      ]
+    },
+    {
+      "id": "annotate",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/sc-annotate",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "integrate"
+      ],
+      "position": {
+        "x": 1080,
+        "y": 300
+      },
+      "cpu": "4096",
+      "memory": "16384",
+      "inputs": [
+        {
+          "from": "integrate",
+          "output": "cells",
+          "input": "cells"
+        }
+      ]
+    },
+    {
+      "id": "markers",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/sc-markers",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "annotate"
+      ],
+      "position": {
+        "x": 1340,
+        "y": 170
+      },
+      "cpu": "2048",
+      "memory": "4096",
+      "inputs": [
+        {
+          "from": "annotate",
+          "output": "cells",
+          "input": "cells"
+        },
+        {
+          "from": "annotate",
+          "output": "labels",
+          "input": "labels"
+        }
+      ]
+    },
+    {
+      "id": "compare",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/st-compare",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "annotate",
+        "prep"
+      ],
+      "position": {
+        "x": 1340,
+        "y": 430
+      },
+      "cpu": "2048",
+      "memory": "4096",
+      "inputs": [
+        {
+          "from": "annotate",
+          "output": "cells",
+          "input": "spatial"
+        },
+        {
+          "from": "annotate",
+          "output": "labels",
+          "input": "labels"
+        },
+        {
+          "from": "prep",
+          "output": "metadata",
+          "input": "metadata"
+        }
+      ],
+      "defaultParams": {
+        "LABEL_COLUMN": "cell_type",
+        "CONDITION_COLUMN": "condition"
+      }
+    },
+    {
+      "id": "report",
+      "type": "processor",
+      "sourceUrl": "https://github.com/pennsieve-apps/sc-report",
+      "tag": "v0.1.0",
+      "dependsOn": [
+        "prep",
+        "qc",
+        "integrate",
+        "annotate",
+        "markers",
+        "compare"
+      ],
+      "position": {
+        "x": 1600,
+        "y": 300
+      },
+      "cpu": "1024",
+      "memory": "2048",
+      "inputs": [
+        {
+          "from": "prep",
+          "output": "metadata",
+          "input": "metadata"
+        },
+        {
+          "from": "qc",
+          "output": "qc",
+          "input": "qc"
+        },
+        {
+          "from": "integrate",
+          "output": "integration",
+          "input": "integration"
+        },
+        {
+          "from": "annotate",
+          "output": "annotation",
+          "input": "annotation"
+        },
+        {
+          "from": "markers",
+          "output": "markers",
+          "input": "markers"
+        },
+        {
+          "from": "compare",
+          "output": "compare",
+          "input": "compare"
+        }
+      ],
+      "defaultParams": {
+        "REPORT_TITLE": "Single-nucleus Atlas Mapping & Condition Comparison"
+      }
+    }
+  ]
+}
