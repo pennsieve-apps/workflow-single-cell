@@ -39,8 +39,12 @@ a `labels.csv` and a `samples.csv`, and needs no spatial coordinates. Its input 
 - Each output folder gets a `provenance.json` with these keys (snake_case): `app` (repo name),
   `version` (from `VERSION`), `tools` (`{package: version}` via `importlib.metadata.version`),
   `parameters`, `inputs` (relative paths), `started`, `finished`, `samples` (per-sample status),
-  `peak_rss_mb`, and `citations`: a list of `{"doi": "...", "pmid": "..." (optional), "text":
-  "Author et al. Journal Year"}` for the methods the step used (the reports gather these).
+  `peak_rss_mb`, `cgroup_peak_mb` (when readable), `threads` (int), and `citations`: a list of
+  `{"doi": "...", "pmid": "..." (optional), "text": "Wolf FA et al. Genome Biol 2018"}` (short
+  form: first author's family name and initials, "et al." when more than one author, journal
+  abbreviation, year) for the methods the step used. Reports render the full reference from their
+  verified records by DOI. `inputs` is a list of relative paths; `started`/`finished` are ISO 8601
+  UTC with seconds.
 - A sample that fails is logged and skipped; the step fails only when every sample failed or no
   input was found. Exit 1 = no usable input / every sample failed, 2 = bad parameters.
 - Logs go to stdout, one line per sample with counts and timings. Never log file contents or
@@ -51,6 +55,19 @@ a `labels.csv` and a `samples.csv`, and needs no spatial coordinates. Its input 
 - Threads: `THREADS` (default `0` = from the cgroup CPU quota); set `OMP_NUM_THREADS`,
   `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`, `NUMBA_NUM_THREADS` before importing numpy.
 - Reproducible: every random step takes `SEED` (default `42`).
+- GPU variants: at start, when the image is a CUDA build (`TORCH_FLAVOUR=cuda`) and
+  `torch.cuda.is_available()` is false, log at ERROR with `torch.version.cuda` and exit 1 (a gpu
+  variant must never silently run hours on CPU or skip a GPU-only step). Log the device name,
+  `torch.version.cuda` and the driver version when a GPU is found. The platform's GPU nodes run
+  the Amazon Linux 2 ECS GPU AMI with NVIDIA driver 550 (CUDA 12.4): CUDA images use torch
+  `2.14.1+cu126` (CUDA 13 needs driver ≥ 580). Set `NVIDIA_DRIVER_CAPABILITIES=compute,utility`.
+- Images: base `python:3.12.16-slim-bookworm` pinned by its multi-arch **index** digest; pip
+  installs `--only-binary=:all:` where possible. Licence wording: "no GPL Python packages" (the
+  Debian base layer contains GPL system tools), or disclose the GPL packages bundled.
+- Sizes in app.yml and README are measured; anything extrapolated is labelled as an estimate with
+  what it was extrapolated from.
+- Tests include the platform's real link layout: a real port folder whose entries are symlinks
+  into a sibling upstream output folder.
 - **No network at run time.** Everything a tool downloads (genome annotations, motif databases,
   models, fonts) is baked into the image at build time, pinned by version and checksum.
 - GPU: apps that can use one declare app.yml `variants` (`cpu` default, `gpu`), see
@@ -164,8 +181,9 @@ GRCm39; `GENOME` selects (`auto` from the fragment chromosome names and `organis
 ### Tables and figures
 
 Tables are CSV (UTF-8, header row, `.` decimal), long format where natural. Figures are PNG,
-150 dpi; per-sample figures are `<sample_id>_<what>.png` with the sample id in the title. A
-`summary.json` per output port holds the headline numbers the report shows.
+150 dpi; per-sample figures are `<sample_id>_<what>.png` with the sample id in the title. A `summary.json`
+in each output port that has headline numbers (qc, integration, annotation, markers, atac qc,
+regulome; not in data ports like `cells`, `droplets`, `model`) holds what the report shows.
 
 ## Credits (every app)
 
