@@ -66,6 +66,10 @@ a `labels.csv` and a `samples.csv`, and needs no spatial coordinates. Its input 
   Debian base layer contains GPL system tools), or disclose the GPL packages bundled.
 - Sizes in app.yml and README are measured; anything extrapolated is labelled as an estimate with
   what it was extrapolated from.
+- Cache folders under `/tmp` (MPLCONFIGDIR, NUMBA_CACHE_DIR) that a build step creates as root must be
+  made writable (`chmod -R a+rwX`) before `USER 1000`: the platform does not remount `/tmp`. Check the
+  image as `docker run --user 1000` WITHOUT a tmpfs `/tmp` (sc-markers v0.1.0 failed on the platform
+  with numba's "no locator available" although every local run, on a tmpfs, passed).
 - Tests include the platform's real link layout: a real port folder whose entries are symlinks
   into a sibling upstream output folder.
 - **No network at run time.** Everything a tool downloads (genome annotations, motif databases,
