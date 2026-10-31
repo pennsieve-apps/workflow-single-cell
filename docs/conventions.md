@@ -33,10 +33,11 @@ a `labels.csv` and a `samples.csv`, and needs no spatial coordinates. Its input 
   everything under a folder named after their `LABEL` parameter (default: the label column used,
   `_` → `-`).
 - Port names: lowercase letters, digits and `-` (no underscores).
-- Each output folder gets a `provenance.json`: app name + version (from `VERSION`), tool versions
-  (`importlib.metadata.version`), parameters, inputs seen (relative paths), timings, per-sample
-  status, peak RSS, and `citations`: the DOIs of the methods the step used (the report gathers
-  these).
+- Each output folder gets a `provenance.json` with these keys (snake_case): `app` (repo name),
+  `version` (from `VERSION`), `tools` (`{package: version}` via `importlib.metadata.version`),
+  `parameters`, `inputs` (relative paths), `started`, `finished`, `samples` (per-sample status),
+  `peak_rss_mb`, and `citations`: a list of `{"doi": "...", "pmid": "..." (optional), "text":
+  "Author et al. Journal Year"}` for the methods the step used (the reports gather these).
 - A sample that fails is logged and skipped; the step fails only when every sample failed or no
   input was found. Exit 1 = no usable input / every sample failed, 2 = bad parameters.
 - Logs go to stdout, one line per sample with counts and timings. Never log file contents or
@@ -65,11 +66,11 @@ only drop observations/genes and add layers, `obs` columns and `obsm` embeddings
 
 | Slot | Content |
 |---|---|
-| `X` | From sc-prep: raw UMI counts, CSR, integer-valued. From sc-qc on: log-normalized (`normalize_total` to `TARGET_SUM`, `log1p`) float32 CSR; raw counts in `layers["counts"]` (after ambient removal when it ran; the uncorrected counts in `layers["counts_raw"]`). Apps that need counts read `layers["counts"]` when present, else `X`. |
+| `X` | From sc-prep: raw UMI counts, CSR, integer-valued. From sc-qc on: log-normalized (`normalize_total` to `TARGET_SUM`, `log1p`) float32 CSR; raw counts in `layers["counts"]` (after ambient removal when it ran, **rounded to integers**, since pseudobulk DE in st-compare requires integer counts; the uncorrected counts in `layers["counts_raw"]`). Apps that need counts read `layers["counts"]` when present, else `X`. |
 | `obs_names` | `<sample_id>:<barcode>`, unique across samples. The barcode is as in the source (for ARC, the same barcode in RNA and ATAC, so `atac-prep` produces the same `obs_names`). |
 | `obs["sample_id"]` | categorical. |
 | `obs["total_counts"]`, `obs["n_genes_by_counts"]`, `obs["pct_counts_mt"]`, `obs["pct_counts_ribo"]` | Written by sc-prep (`scanpy.pp.calculate_qc_metrics`; mito = `MT-`/`mt-`, ribo = `RPS`/`RPL` prefixes, case-insensitive). |
-| From sc-qc | `obs["doublet_score"]`, `obs["predicted_doublet"]`, `obs["qc_pass"]` is not kept (failing cells are dropped); `obs["ambient_fraction"]` when ambient removal ran. |
+| From sc-qc | (its `qc` port's `qc_summary.csv` has one row per sample: `sample_id, n_cells_before, n_cells_after, n_removed_<reason>` per removal reason (`ambient_empty`, `doublet`, `low_counts`, `low_genes`, `high_mito`, …), `ambient_method`; the reports read these names) `obs["doublet_score"]`, `obs["predicted_doublet"]`, `obs["qc_pass"]` is not kept (failing cells are dropped); `obs["ambient_fraction"]` when ambient removal ran. |
 | From sc-integrate | `obsm["X_pca"]`, `obsm["X_integrated"]` (scVI latent or Harmony-corrected PCs, method in `uns["pennsieve"]["integration"]`), `obsm["X_umap"]`, `obs["cluster"]` (`C01`, …, shared across samples). |
 | From sc-annotate | `obs["cell_type"]`, `obs["cell_type_score"]` (confidence 0–1), `obs["cell_type_source"]` (`reference`, `markers`, `model`). |
 | Sample metadata | Every column of the sample's row in `samples.csv` (below) except `path`, as categorical `obs` columns (`condition`, `sex`, `donor`, `tissue`, …). |
@@ -138,7 +139,7 @@ its reference.
 `atac-prep` writes `<sample_id>.h5ad` per sample: SnapATAC2 AnnData with the fragment file
 imported (`obsm["fragment_paired"]` or SnapATAC2's own layout), a tile matrix (500 bp bins,
 `X`), `obs` QC (`n_fragment`, `frac_dup`, `frac_mito`, `tsse`), `obs_names` matching the RNA
-side (`<sample_id>:<barcode>`). Cells failing ATAC QC are dropped; `atac_qc.csv` lists them.
+side (`<sample_id>:<barcode>`). Cells failing ATAC QC are dropped; `atac_qc.csv` lists every barcode (`sample_id, obs_id, n_fragment, frac_dup, frac_mito, tsse, passed, reason`) and `qc_summary.csv` has one row per sample (`sample_id, n_cells_before, n_cells_after, n_removed_<reason>`, `median_tsse`, `median_fragments`).
 Genome annotation (GENCODE GTF for TSS, chromosome sizes) is baked into the image for GRCh38 and
 GRCm39; `GENOME` selects (`auto` from the fragment chromosome names and `organism`).
 
