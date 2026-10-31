@@ -73,7 +73,8 @@ only drop observations/genes and add layers, `obs` columns and `obsm` embeddings
 | From sc-qc | (its `qc` port's `qc_summary.csv` has one row per sample: `sample_id, n_cells_before, n_cells_after, n_removed_<reason>` per removal reason (`ambient_empty`, `doublet`, `low_counts`, `low_genes`, `high_mito`, …), `ambient_method`; the reports read these names) `obs["doublet_score"]`, `obs["predicted_doublet"]`, `obs["qc_pass"]` is not kept (failing cells are dropped); `obs["ambient_fraction"]` when ambient removal ran. |
 | From sc-integrate | `obsm["X_pca"]`, `obsm["X_integrated"]` (scVI latent or Harmony-corrected PCs, method in `uns["pennsieve"]["integration"]`), `obsm["X_umap"]`, `obs["cluster"]` (`C01`, …, shared across samples). |
 | From sc-annotate | `obs["cell_type"]`, `obs["cell_type_score"]` (confidence 0–1), `obs["cell_type_source"]` (`reference`, `markers`, `model`). |
-| Sample metadata | Every column of the sample's row in `samples.csv` (below) except `path`, as categorical `obs` columns (`condition`, `sex`, `donor`, `tissue`, …). |
+| Sample metadata | The metadata columns of the sample's row in `samples.csv` (below), as categorical `obs` columns (`condition`, `sex`, `subject_id`, `tissue`, …); not the bookkeeping columns (`path`, `source`, `n_obs`, `n_genes`, `organism`; organism is in `uns`). |
+| Source labels | Per-cell columns the source already had (author labels in an `.h5ad` or Seurat object) are kept; one whose name a later step writes (`cell_type`, `cluster`, …) becomes `source_<name>`. |
 | `var_names` | Gene symbols, made unique. `var["gene_ids"]` (Ensembl ids), `var["feature_types"]`; only `Gene Expression` features are kept (ARC `Peaks` go to atac-prep). `var["mt"]`, `var["ribo"]` booleans. |
 | `uns["pennsieve"]` | `source` (input path), `chemistry` when known (`3p`, `5p`, `flex`, `multiome`), `organism` (`human`, `mouse`, `rat`; from metadata, else from gene symbol case/Ensembl prefix), `prep_version`, then each step adds its own key (`qc`, `integration`, `annotation`) with its parameters. |
 
@@ -104,7 +105,7 @@ columns, from (in order of precedence):
    subject row. Column names become snake_case (`subject experimental group` →
    `subject_experimental_group`). Subject columns get no prefix unless they clash with a sample
    column (then `subject_<name>`). Empty columns are dropped. **Only columns named in
-   `METADATA_COLUMNS` (comma-separated, default: `subject_experimental_group,sample_experimental_group,sex,age,species,sample_anatomical_location,laterality`) are copied onto cells**; all
+   `METADATA_COLUMNS` (comma-separated, default: `subject_id,subject_experimental_group,sample_experimental_group,sex,age,species,sample_anatomical_location,laterality`; `subject_id` is the donor key integration and pseudobulk DE block on) are copied onto cells**; all
    columns go to `samples_full.csv` in the metadata port, so clinical fields never spread into
    every derived file unless asked for.
 3. `CONDITION_COLUMN` (default `auto`: `condition` if present, else

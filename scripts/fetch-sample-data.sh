@@ -30,8 +30,8 @@ fetch() { # fetch <id> <version> <dest dir> <regex of paths to keep>
 
 case "${1:-snrna}" in
   snrna)
-    fetch 475 1 data/drg-c2 'count/sample_(filtered|raw)_feature_bc_matrix\.h5$'
-    fetch 480 1 data/drg-atlas 'count/sample_(filtered|raw)_feature_bc_matrix\.h5$'
+    fetch 475 1 data/drg-c2 'count/sample_(filtered|raw)_feature_bc_matrix(\.h5$|/)'
+    fetch 480 1 data/drg-atlas 'count/sample_(filtered|raw)_feature_bc_matrix(\.h5$|/)'
     ;;
   multiome)
     fetch 465 1 data/sympathetic-multiome 'filtered_feature_bc_matrix/|atac_fragments\.tsv\.gz$|meta\.data\.csv$'
