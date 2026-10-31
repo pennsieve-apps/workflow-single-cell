@@ -1,0 +1,41 @@
+cff-version: "1.2.0"
+message: If you use these workflows, please cite them, Pennsieve (preferred-citation) when you used Pennsieve to store, analyse, share or publish the data, the datasets you used and the methods each app lists.
+type: software
+title: Single-cell workflows on Pennsieve
+abstract: Workflows for single-nucleus and single-cell RNA-seq (atlas mapping and condition comparison) and single-nucleus multiome (gene regulation), built from the sc-* and atac-* apps.
+authors:
+- name: Pennsieve (University of Pennsylvania)
+repository-code: https://github.com/pennsieve-apps/workflow-single-cell
+license: Apache-2.0
+preferred-citation:
+  type: article
+  title: "Pennsieve: A Collaborative Platform for Translational Neuroscience and Beyond"
+  authors:
+    - family-names: Goldblum
+      given-names: Zack
+      orcid: https://orcid.org/0000-0003-2803-7051
+    - family-names: Xu
+      given-names: Zhongchuan
+    - family-names: Shi
+      given-names: Haoer
+    - family-names: Orzechowski
+      given-names: Patryk
+    - family-names: Spence
+      given-names: Jamaal
+      orcid: https://orcid.org/0009-0000-5473-9167
+    - family-names: Davis
+      given-names: Kathryn A.
+      orcid: https://orcid.org/0000-0002-7020-6480
+    - family-names: Litt
+      given-names: Brian
+    - family-names: Sinha
+      given-names: Nishant
+    - family-names: Wagenaar
+      given-names: Joost
+      orcid: https://orcid.org/0000-0003-0837-7120
+  journal: Scientific Data
+  year: 2025
+  volume: 12
+  issue: "1"
+  start: "1834"
+  doi: 10.1038/s41597-025-06075-5

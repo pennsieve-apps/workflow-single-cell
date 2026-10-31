@@ -1,7 +1,7 @@
 {
   "name": "Single-nucleus Atlas Mapping & Condition Comparison",
   "summary": "snRNA/scRNA-seq: QC, integration, cell types, markers, pseudobulk DE between conditions.",
-  "description": "Maps the cell types of single-nucleus or single-cell RNA-seq samples and compares conditions. Reads Cell Ranger (count, Flex, ARC), .h5ad or Seurat .rds input and joins SPARC subjects/samples metadata onto the cells (sc-prep), removes ambient RNA (CellBender, gpu variant), doublets and low-quality nuclei and normalizes (sc-qc), integrates samples by donor with Harmony (cpu) or scVI (gpu), clusters and embeds them (sc-integrate), labels cell types from cited marker sets (MARKER_SET: drg-human, knee-human, broad) or by mapping to a reference (sc-annotate), finds marker genes (sc-markers), tests composition and pseudobulk differential expression per cell type between conditions (st-compare), and writes an HTML report with citations (sc-report). Choose the gpu variant of sc-qc, sc-integrate and sc-annotate on a GPU node for ambient-RNA removal and scVI/scANVI.",
+  "description": "Maps the cell types of single-nucleus or single-cell RNA-seq samples and compares conditions. Reads Cell Ranger (count, Flex, ARC), .h5ad or Seurat .rds input and joins SPARC subjects/samples metadata onto the cells (sc-prep), removes ambient RNA (CellBender, gpu variant), doublets and low-quality nuclei and normalizes (sc-qc), integrates samples by donor with Harmony (cpu) or scVI (gpu), clusters and embeds them (sc-integrate), labels cell types from cited marker sets (MARKER_SET: drg-human, knee-human, broad) or by mapping to a reference (sc-annotate), finds marker genes (sc-markers), tests composition and pseudobulk differential expression per cell type between conditions (st-compare), and writes an HTML report with citations (sc-report). Choose the gpu variant of sc-qc, sc-integrate and sc-annotate on a GPU node for ambient-RNA removal and scVI/scANVI. If you used Pennsieve to store, analyse, share or publish data reported in a publication, please cite Goldblum Z, et al. Scientific Data 2025;12:1834 (doi:10.1038/s41597-025-06075-5), the datasets you used and the methods listed in the report.",
   "inputs": [
     {
       "id": "counts",
@@ -172,7 +172,7 @@
       "id": "markers",
       "type": "processor",
       "sourceUrl": "https://github.com/pennsieve-apps/sc-markers",
-      "tag": "v0.1.0",
+      "tag": "v0.1.1",
       "dependsOn": [
         "annotate"
       ],

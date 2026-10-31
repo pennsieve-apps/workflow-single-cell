@@ -56,7 +56,8 @@ def atlas():
             "(sc-annotate), finds marker genes (sc-markers), tests composition and pseudobulk differential "
             "expression per cell type between conditions (st-compare), and writes an HTML report with "
             "citations (sc-report). Choose the gpu variant of sc-qc, sc-integrate and sc-annotate on a GPU "
-            "node for ambient-RNA removal and scVI/scANVI."),
+            "node for ambient-RNA removal and scVI/scANVI."
+            " If you used Pennsieve to store, analyse, share or publish data reported in a publication, please cite Goldblum Z, et al. Scientific Data 2025;12:1834 (doi:10.1038/s41597-025-06075-5), the datasets you used and the methods listed in the report."),
         "inputs": [
             {"id": "counts", "name": "Single-cell data",
              "description": "A folder of Cell Ranger outputs (count/, Flex or ARC), .h5ad or Seurat .rds files, "
