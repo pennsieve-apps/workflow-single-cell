@@ -5,6 +5,11 @@ title: Single-cell workflows on Pennsieve
 abstract: Workflows for single-nucleus and single-cell RNA-seq (atlas mapping and condition comparison) and single-nucleus multiome (gene regulation), built from the sc-* and atac-* apps.
 authors:
 - name: Pennsieve (University of Pennsylvania)
+contact:
+- given-names: Joost
+  family-names: Wagenaar
+  orcid: https://orcid.org/0009-0004-5925-5451
+  affiliation: University of Pennsylvania
 repository-code: https://github.com/pennsieve-apps/workflow-single-cell
 license: Apache-2.0
 preferred-citation:
